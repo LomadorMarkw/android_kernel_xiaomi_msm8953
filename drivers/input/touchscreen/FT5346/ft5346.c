@@ -34,8 +34,8 @@
 #include <asm/uaccess.h>
 
 #if WT_CTP_GESTURE_SUPPORT
-#define FTS_GESTRUE_POINTS 				255
-#define FTS_GESTRUE_POINTS_HEADER 		8
+#define FTS_GESTURE_POINTS 				255
+#define FTS_GESTURE_POINTS_HEADER 		8
 
 static void Ctp_Gesture_Fucntion_Proc_File(void);
 static char gtp_gesture_value;
@@ -352,7 +352,7 @@ static void check_gesture(int gesture_id, struct input_dev *ip_dev)
 }
 static int fts_read_Gesturedata(struct input_dev *ip_dev)
 {
-	unsigned char buf[FTS_GESTRUE_POINTS * 3] = { 0 };
+	unsigned char buf[FTS_GESTURE_POINTS * 3] = { 0 };
 	int ret = -1;
 	int i = 0;
 	int gesture_id = 0;
@@ -360,7 +360,7 @@ static int fts_read_Gesturedata(struct input_dev *ip_dev)
 		buf[0] = 0xd3;
 
 	pointnum = 0;
-	ret = ft5x06_i2c_read(gesture_client, buf, 1, buf, FTS_GESTRUE_POINTS_HEADER);
+	ret = ft5x06_i2c_read(gesture_client, buf, 1, buf, FTS_GESTURE_POINTS_HEADER);
 	if (ret < 0) {
 		CTP_ERROR("%s read touchdata failed.\n", __func__);
 		return ret;
@@ -732,11 +732,10 @@ static int ft5x06_ts_resume(struct device *dev)
 	}
 
 #if WT_CTP_GESTURE_SUPPORT
-	if (gtp_gesture_onoff == '1') {
 		printk("Resume Gesture TP.\n");
+	if (gtp_gesture_onoff == '1') {
 		ft5x0x_write_reg(gesture_client, 0xD0, 0x00);
 		printk("Resume Gesture TP Done.\n");
-		disable_irq(data->client->irq);
 	}
 #endif
 
@@ -2508,7 +2507,6 @@ static ssize_t proc_gesture_onoff_read(struct file *file, char __user *page, siz
 static ssize_t proc_gesture_onoff_write(struct file *file,  const char __user *buffer, size_t count, loff_t *ppos)
 {
 	sscanf(buffer, "%c", &gtp_gesture_onoff);
-
 	return count;
 }
 
@@ -2954,10 +2952,6 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 #endif
 
 	enable_irq(data->client->irq);
-	if (gtp_gesture_onoff == '0'){
-		/* IRQ should be disabled if gesture is off */
-		disable_irq(data->client->irq);
-	}
 
 	return 0;
 
